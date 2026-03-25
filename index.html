@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="wechat-enable-text-zoom-em" content="false">
+    <title>关注我的全网账号</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 核心修复：全屏无黑边 */
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* 整体垂直居中 */
+            position: relative;
+            
+            /* 完美全屏背景 */
+            background-image: url('https://jump-page-8g3p6yeubff7c5af-1256362179.tcloudbaseapp.com/18.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* 黑色遮罩层（全屏，无黑块） */
+        .bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 0;
+        }
+
+        /* 内容容器（控制按钮整体往下移） */
+        .container {
+            z-index: 10;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+            margin-top: 280px; /* 按钮往下移，不会出现黑块 */
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #fff;
+            margin-bottom: 40px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .btn {
+            padding: 16px 0;
+            color: white;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .douyin { background: linear-gradient(135deg, #000 0%, #333 100%); }
+        .kuaishou { background: linear-gradient(135deg, #FF4906, #FF8C00); }
+        .xhs { background: linear-gradient(135deg, #FE2C55, #FF5073); }
+
+        .tips {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* 微信引导遮罩 */
+        .wechat-guide-mask {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 60px;
+        }
+        .guide-arrow {
+            font-size: 80px;
+            color: white;
+            position: absolute;
+            top: 10px; right: 20px;
+            animation: arrowBlink 1s infinite alternate;
+        }
+        @keyframes arrowBlink {
+            from { opacity: 0.3; }
+            to { opacity: 1; }
+        }
+        .guide-text {
+            color: white;
+            font-size: 20px;
+            line-height: 1.8;
+            text-align: center;
+            margin-top: 120px;
+        }
+        .guide-tips {
+            color: #ccc;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        .close-guide {
+            margin-top: 50px;
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 10px 35px;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-overlay"></div>
+
+    <div class="container">
+        <h1>全网同名，欢迎关注</h1>
+        <div class="btn-group">
+            <button class="btn douyin" onclick="handleDouyinJump()">🎵 抖音</button>
+            <button class="btn kuaishou" onclick="openNormalApp('kuaishou')">🔥 快手</button>
+            <button class="btn xhs" onclick="openNormalApp('xhs')">📕 小红书</button>
+        </div>
+        <p class="tips">抖音需在浏览器打开，快手/小红书可直接跳转</p>
+    </div>
+
+    <!-- 微信引导 -->
+    <div id="wechatGuide" class="wechat-guide-mask">
+        <div class="guide-arrow">👆</div>
+        <div class="guide-text">
+            <p><strong>点击右上角 ··· 按钮</strong></p>
+            <p>选择【在浏览器打开】</p>
+            <p>即可直达我的抖音主页</p>
+        </div>
+        <p class="guide-tips">跳转浏览器后可直接唤起抖音APP</p>
+        <button class="close-guide" onclick="closeGuide()">我知道了</button>
+    </div>
+
+    <script>
+        const DOUYIN_URL = "https://www.douyin.com/user/MS4wLjABAAAAc16CAxvohk6xucaoj5OZbrtFps8ZSUmf_wQ76-BGbrE";
+        const kuaishouConfig = { scheme: "kwai://profile/JgQmnsZ9", url: "https://v.kuaishou.com/JgQmnsZ9" };
+        const xhsConfig = { scheme: "xhsdiscover://user/402935856", url: "https://www.xiaohongshu.com/user/profile/402935856" };
+
+        function isWechatBrowser() {
+            const ua = navigator.userAgent.toLowerCase();
+            return ua.includes('micromessenger');
+        }
+
+        function handleDouyinJump() {
+            if (isWechatBrowser()) {
+                document.getElementById('wechatGuide').style.display = 'flex';
+            } else {
+                location.href = DOUYIN_URL;
+            }
+        }
+
+        function closeGuide() {
+            document.getElementById('wechatGuide').style.display = 'none';
+        }
+
+        document.getElementById('wechatGuide').onclick = function(e) {
+            if (e.target === this) closeGuide();
+        }
+
+        function openNormalApp(platform) {
+            const cfg = platform === 'kuaishou' ? kuaishouConfig : xhsConfig;
+            location.href = cfg.scheme;
+            setTimeout(() => location.href = cfg.url, 2000);
+        }
+    </script>
+</body>
+</html>
